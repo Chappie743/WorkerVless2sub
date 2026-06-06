@@ -33,7 +33,7 @@ jobs:
           ./cfst -f ip.txt -o result.csv \
             -url "https://speedtest.andersonrobotics.xx.kg" \
             -tl 200 -tll 0 -tlr 0.2 \
-            -sl 1 -dn 200 -dt 5 \
+            -sl 1 -dn 10 -dt 5 \
             -p 0 -n 500
 
           echo "测速完成，共 $(tail -n +2 result.csv | wc -l) 个 IP"

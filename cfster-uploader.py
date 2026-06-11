@@ -94,14 +94,18 @@ def upload_to_github():
     today = datetime.datetime.now(tz).strftime("%Y-%m-%d")
     branch_name = f"speedtest/{today}"
 
-    # 1. 创建分支
-    print(f"   1/5 创建分支 {branch_name}...", end=" ")
-    run(f"gh api repos/{GITHUB_REPO}/git/refs/heads/main")
+    # 1. 拉取最新 main 并创建分支
+    print(f"   1/5 拉取最新代码...", end=" ")
+    run("git checkout main", check=False)
+    run("git reset --hard HEAD", check=False)
+    run("git fetch origin main", check=False)
+    run("git rebase origin/main", check=False)
+    print(f"创建分支 {branch_name}...", end=" ")
     run(f"git checkout -B {branch_name}", check=False)
     print("✅")
 
     # 2. 复制结果文件
-    print(f"   2/4 复制结果文件...", end=" ")
+    print(f"   2/5 复制结果文件...", end=" ")
     with open(RESULT_CSV, 'r') as f:
         lines = f.readlines()
         header = lines[0]
@@ -112,7 +116,7 @@ def upload_to_github():
     print(f"✅ ({len(filtered)-1} 个有速度 IP)")
 
     # 3. 生成 latest.csv、归档、history.csv
-    print(f"   3/4 生成 history.csv...", end=" ")
+    print(f"   3/5 生成 history.csv...", end=" ")
     os.makedirs("archive", exist_ok=True)
 
     # latest.csv（无表头，仅 speed>0）
@@ -147,7 +151,7 @@ def upload_to_github():
     print(f"✅ ({len(history_rows)} 个 IP)")
 
     # 4. 提交并推送
-    print(f"   4/4 提交并推送...", end=" ")
+    print(f"   4/5 提交并推送...", end=" ")
     run(f"git add {GITHUB_FILE_PATH} latest.csv history.csv archive/")
     run(f'git commit -m "cfst: {today}"', check=False)
     run(f"git push -u fork {branch_name} --force", check=False)

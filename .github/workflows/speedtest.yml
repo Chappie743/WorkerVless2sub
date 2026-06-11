@@ -4,8 +4,6 @@ permissions:
   contents: write
 
 on:
-  schedule:
-    - cron: '0 2 * * *'  # 每天 UTC 02:00（北京时间 10:00）
   workflow_dispatch:
 
 env:
@@ -28,13 +26,31 @@ jobs:
           tar -zxf cfst_linux_amd64.tar.gz
           chmod +x cfst
 
+      - name: Generate IP list
+        run: |
+          if [ -f addressescsv.csv ]; then
+            tail -n +2 addressescsv.csv | awk -F',' '{print $1}' > ip.txt
+            echo "已从 addressescsv.csv 提取 $(wc -l < ip.txt) 个 IP"
+          elif [ -f addressesapi.txt ]; then
+            awk -F'#' '{print $1}' addressesapi.txt > ip.txt
+            echo "已从 addressesapi.txt 提取 $(wc -l < ip.txt) 个 IP"
+          else
+            # 默认 Cloudflare IP 段
+            cat > ip.txt << 'EOF'
+104.16.0.0/12
+172.64.0.0/13
+162.159.0.0/16
+EOF
+            echo "使用默认 Cloudflare IP 段"
+          fi
+
       - name: Run SpeedTest
         run: |
           ./cfst -f ip.txt -o result.csv \
             -url "https://speedtest.andersonrobotics.xx.kg" \
             -tl 200 -tll 0 -tlr 0.2 \
-            -sl 1 -dn 200 -dt 5 \
-            -p 0 -n 500
+            -sl 1 -dn 20 -dt 5 \
+            -p 0 -n 10
 
           echo "测速完成，共 $(tail -n +2 result.csv | wc -l) 个 IP"
 

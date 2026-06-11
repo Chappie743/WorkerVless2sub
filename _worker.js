@@ -313,7 +313,7 @@ async function 整理测速结果(tls) {
 			return row[remarkColumnIndex].trim();
 		}
 
-		return '';
+		return '未知';
 	}
 
 	function isLikelyAddress(value) {

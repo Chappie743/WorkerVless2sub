@@ -1,74 +1,43 @@
-name: CloudflareSpeedTest
+name: Process SpeedTest Results
 
 permissions:
   contents: write
 
 on:
-  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: [result.csv]
 
 env:
-  CFST_VERSION: '2.3.5'
   HISTORY_DAYS: 7
   HISTORY_MAX: 200
 
 jobs:
-  speedtest:
-    name: Run CFST
+  process:
+    name: Build latest & history CSVs
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Download CFST
-        run: |
-          wget -q "https://github.com/XIU2/CloudflareSpeedTest/releases/download/v${{ env.CFST_VERSION }}/cfst_linux_amd64.tar.gz"
-          tar -zxf cfst_linux_amd64.tar.gz
-          chmod +x cfst
-
-      - name: Generate IP list
-        run: |
-          if [ -f addressescsv.csv ]; then
-            tail -n +2 addressescsv.csv | awk -F',' '{print $1}' > ip.txt
-            echo "已从 addressescsv.csv 提取 $(wc -l < ip.txt) 个 IP"
-          elif [ -f addressesapi.txt ]; then
-            awk -F'#' '{print $1}' addressesapi.txt > ip.txt
-            echo "已从 addressesapi.txt 提取 $(wc -l < ip.txt) 个 IP"
-          else
-            echo "使用默认 Cloudflare IP 段"
-            echo "104.16.0.0/12" > ip.txt
-            echo "172.64.0.0/13" >> ip.txt
-            echo "162.159.0.0/16" >> ip.txt
-          fi
-          # 限制测速 IP 数量
-          head -50 ip.txt > ip.limited.txt && mv ip.limited.txt ip.txt
-          echo "取前 50 个 IP 进行测速"
-
-      - name: Run SpeedTest
-        run: |
-          ./cfst -f ip.txt -o result.csv \
-            -url "https://speedtest.andersonrobotics.xx.kg" \
-            -tl 200 -tll 0 -tlr 0.2 \
-            -sl 1 -dn 10 -dt 5 \
-            -p 0 -n 500
-
-          echo "测速完成，共 $(tail -n +2 result.csv | wc -l) 个 IP"
-
       - name: Process
         run: |
+          [ -f result.csv ] || { echo "result.csv not found"; exit 0; }
+
           TODAY=$(TZ='Asia/Shanghai' date +%Y-%m-%d)
           mkdir -p archive
 
-          # latest.csv → 有速度的 IP（高质量）
+          # latest.csv → 有速度的 IP
           awk -F',' 'NR==1 || $6+0 > 0' result.csv | tail -n +2 > latest.csv
           echo "latest: $(wc -l < latest.csv) 个有速度 IP"
 
-          # archive → 保存有速度的结果（已过滤 0MB）
+          # archive → 保存有速度的结果
           cp latest.csv "archive/$TODAY.csv"
 
           # history.csv → 合并 7 天，按 IP 去重，最多 HISTORY_MAX 个
           echo "IP地址,已发送,已接收,丢包率,平均延迟,下载速度(MB/s),地区码" > history.csv
-          ls -r archive/*.csv | head -$HISTORY_DAYS | while read f; do
+          ls -r archive/*.csv 2>/dev/null | head -$HISTORY_DAYS | while read f; do
             cat "$f"
           done | awk -F',' '!seen[$1]++' | head -$HISTORY_MAX >> history.csv
 
@@ -85,5 +54,5 @@ jobs:
           git add latest.csv history.csv archive/
           git diff --cached --quiet && exit 0
 
-          git commit -m "cfst: $(date +%Y-%m-%d)"
+          git commit -m "cfst: $(TZ='Asia/Shanghai' date +%Y-%m-%d)"
           git push

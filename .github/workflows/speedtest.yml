@@ -39,7 +39,7 @@ jobs:
           # history.csv → 合并 7 天，按 IP 去重，最多 HISTORY_MAX 个
           ls -r archive/*.csv 2>/dev/null | head -$HISTORY_DAYS | while read f; do
             cat "$f"
-          done | awk -F',' 'NR>1 && $6+0>0 && !seen[$1]++' | head -$HISTORY_MAX > history.csv
+          done | awk -F',' '$6+0>0 && $7!="N/A" && !seen[$1]++' | head -$HISTORY_MAX > history.csv
 
           # 清理过期 archive
           find archive -name "*.csv" -mtime +$HISTORY_DAYS -delete

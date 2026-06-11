@@ -35,13 +35,10 @@ jobs:
             awk -F'#' '{print $1}' addressesapi.txt > ip.txt
             echo "已从 addressesapi.txt 提取 $(wc -l < ip.txt) 个 IP"
           else
-            # 默认 Cloudflare IP 段
-            cat > ip.txt << 'EOF'
-104.16.0.0/12
-172.64.0.0/13
-162.159.0.0/16
-EOF
             echo "使用默认 Cloudflare IP 段"
+            echo "104.16.0.0/12" > ip.txt
+            echo "172.64.0.0/13" >> ip.txt
+            echo "162.159.0.0/16" >> ip.txt
           fi
           # 限制测速 IP 数量
           head -50 ip.txt > ip.limited.txt && mv ip.limited.txt ip.txt

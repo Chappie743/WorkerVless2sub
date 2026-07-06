@@ -313,7 +313,7 @@ async function 整理测速结果(tls) {
 			return row[remarkColumnIndex].trim();
 		}
 
-		return '';
+		return '未知';
 	}
 
 	function isLikelyAddress(value) {
@@ -343,7 +343,10 @@ async function 整理测速结果(tls) {
 			const portIndex = findColumn(normalizedHeader, ['端口', 'port']);
 			const tlsIndex = findColumn(normalizedHeader, ['tls', 'istls', '是否tls']);
 			const speedIndex = findColumn(normalizedHeader, ['下载速度', '速度', 'speed', 'downloadspeed', 'download']);
-			const remarkColumnIndex = findRemarkColumn(normalizedHeader);
+			let remarkColumnIndex = hasHeader ? findRemarkColumn(normalizedHeader) : (rows[0].length - 1);
+			if (remarkColumnIndex === -1 && header.length > 0) {
+				remarkColumnIndex = header.length - 1;
+			}
 
 			if (ipIndex === -1) {
 				ipIndex = 0;
@@ -1246,7 +1249,7 @@ export default {
 				}
 			}
 
-			path = env.PATH || "/?ed=2560";
+			path = env.PATH || (type === 'grpc' ? '' : "/?ed=2560");
 			sni = env.SNI || host;
 			type = env.TYPE || type;
 			隧道版本作者 = env.ED || 隧道版本作者;
@@ -1350,8 +1353,8 @@ export default {
 			}
 
 			if (!path || path.trim() === '') {
-				path = '/?ed=2560';
-			} else {
+				path = type === 'grpc' ? '' : '/?ed=2560';
+			} else if (type !== 'grpc') {
 				// 如果第一个字符不是斜杠，则在前面添加一个斜杠
 				path = (path[0] === '/') ? path : '/' + path;
 			}

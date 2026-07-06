@@ -1,21 +1,21 @@
-name: CloudflareSpeedTest
+name: Process SpeedTest Results
 
 permissions:
   contents: write
 
 on:
-  schedule:
-    - cron: '0 2 * * *'  # 每天 UTC 02:00（北京时间 10:00）
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths: [result.csv]
 
 env:
-  CFST_VERSION: '2.3.5'
   HISTORY_DAYS: 7
   HISTORY_MAX: 200
 
 jobs:
-  speedtest:
-    name: Run CFST
+  process:
+    name: Build latest & history CSVs
     runs-on: ubuntu-latest
 
     steps:
@@ -40,26 +40,27 @@ jobs:
 
       - name: Process
         run: |
-          TODAY=$(date +%Y-%m-%d)
+          [ -f result.csv ] || { echo "result.csv not found"; exit 0; }
+
+          TODAY=$(TZ='Asia/Shanghai' date +%Y-%m-%d)
           mkdir -p archive
 
-          # latest.csv → 有速度的 IP（高质量）
+          # latest.csv → 有速度的 IP
           awk -F',' 'NR==1 || $6+0 > 0' result.csv | tail -n +2 > latest.csv
           echo "latest: $(wc -l < latest.csv) 个有速度 IP"
 
-          # archive → 保存有速度的结果（已过滤 0MB）
+          # archive → 保存有速度的结果
           cp latest.csv "archive/$TODAY.csv"
 
           # history.csv → 合并 7 天，按 IP 去重，最多 HISTORY_MAX 个
-          echo "IP地址,已发送,已接收,丢包率,平均延迟,下载速度(MB/s),地区码" > history.csv
-          ls -r archive/*.csv | head -$HISTORY_DAYS | while read f; do
-            tail -n +2 "$f"
-          done | awk -F',' '!seen[$1]++' | head -$HISTORY_MAX >> history.csv
+          ls -r archive/*.csv 2>/dev/null | head -$HISTORY_DAYS | while read f; do
+            cat "$f"
+          done | awk -F',' '$6+0>0 && $7!="N/A" && !seen[$1]++' | head -$HISTORY_MAX > history.csv
 
           # 清理过期 archive
           find archive -name "*.csv" -mtime +$HISTORY_DAYS -delete
 
-          echo "history: $(($(wc -l < history.csv) - 1)) 个 IP（去重后，上限 $HISTORY_MAX）"
+          echo "history: $(wc -l < history.csv) 个 IP（去重后，上限 $HISTORY_MAX）"
 
       - name: Commit & Push
         run: |
@@ -69,5 +70,5 @@ jobs:
           git add latest.csv history.csv archive/
           git diff --cached --quiet && exit 0
 
-          git commit -m "cfst: $(date +%Y-%m-%d)"
+          git commit -m "cfst: $(TZ='Asia/Shanghai' date +%Y-%m-%d)"
           git push

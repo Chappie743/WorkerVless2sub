@@ -665,7 +665,7 @@ function 文本转Base64(str) {
 }
 
 async function 表单页面(request) {
-	const url = new 链接(request.url);
+	const url = new URL(request.url);
 	const 网页 = `
 			<!DOCTYPE html>
 			<html>
@@ -1147,7 +1147,7 @@ export default {
 		页脚信息 = env.BEIAN || env.BY || 页脚信息;
 		const UA头 = request.headers.get('User-Agent');
 		const UA = UA头 ? UA头.toLowerCase() : "null";
-		const url = new 链接(request.url);
+		const url = new URL(request.url);
 		const 格式 = url.searchParams.get('format') ? url.searchParams.get('format').toLowerCase() : "null";
 		let 豪斯特 = "";
 		let 油爱滴 = "";

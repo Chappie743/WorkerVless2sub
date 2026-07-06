@@ -1286,6 +1286,14 @@ export default {
 			}
 			sni = url.searchParams.get('sni') || host;
 			type = url.searchParams.get('type') || type;
+			const grpcAuthority = url.searchParams.get('authority');
+			const grpcServiceName = url.searchParams.get('serviceName');
+			const grpcMode = url.searchParams.get('mode');
+			if (type === 'grpc') {
+				host = grpcAuthority || host;
+				sni = grpcAuthority || sni;
+				path = grpcServiceName || '';
+			}
 			scv = url.searchParams.get('allowInsecure') == '1' ? 'true' : (url.searchParams.get('scv') || scv);
 			const mode = url.searchParams.get('mode') || null;
 			const extra = url.searchParams.get('extra') || null;
@@ -1508,8 +1516,10 @@ export default {
 						const vmessLink = `vmess://${utf8ToBase64(`{"v":"2","ps":"${addressid + EndPS}","add":"${address}","port":"${port}","id":"${uuid}","aid":"${额外ID}","scy":"${加密方式}","net":"${net}","type":"${headerType}","host":"${host}","path":"${grpcPath}","tls":"","sni":"","alpn":"${encodeURIComponent(alpn)}","fp":""}`)}`;
 						return vmessLink;
 					} else {
+						const authorityParam = type === 'grpc' ? `&authority=${encodeURIComponent(host)}` : '';
+						const serviceNameParam = type === 'grpc' && path ? `&serviceName=${encodeURIComponent(path)}` : '';
 						const grpcSkip = type === 'grpc' ? '' : `&path=${encodeURIComponent(path)}`;
-						const 为烈士Link = `${atob(atob('ZG14bGMzTTZMeTg9')) + uuid}@${address}:${port}?security=&type=${type}&host=${host}${grpcSkip}&encryption=none#${encodeURIComponent(addressid + EndPS)}`;
+						const 为烈士Link = `${atob(atob('ZG14bGMzTTZMeTg9')) + uuid}@${address}:${port}?security=&type=${type}&host=${host}${authorityParam}${serviceNameParam}${grpcSkip}&encryption=none#${encodeURIComponent(addressid + EndPS)}`;
 						return 为烈士Link;
 					}
 
@@ -1611,12 +1621,16 @@ export default {
 					const vmessLink = `vmess://${utf8ToBase64(`{"v":"2","ps":"${addressid + 节点备注}","add":"${address}","port":"${port}","id":"${uuid}","aid":"${额外ID}","scy":"${加密方式}","net":"${net}","type":"${headerType}","host":"${伪装域名}","path":"${grpcPath}","tls":"tls","sni":"${sni}","alpn":"${encodeURIComponent(alpn)}","fp":"","allowInsecure":"${scv == 'true' ? '1' : '0'}","fragment":"1,40-60,30-50,tlshello"}`)}`;
 					return vmessLink;
 				} else if (协议类型 == atob('VHJvamFu')) {
+					const authorityParam = type === 'grpc' ? `&authority=${encodeURIComponent(伪装域名)}` : '';
+					const serviceNameParam = type === 'grpc' && 最终路径 ? `&serviceName=${encodeURIComponent(最终路径)}` : '';
 					const grpcSkip = type === 'grpc' ? '' : `&path=${encodeURIComponent(最终路径)}`;
-					const 特洛伊Link = `${atob(atob('ZEhKdmFtRnVPaTh2')) + uuid}@${address}:${port}?security=tls&sni=${sni}&alpn=${encodeURIComponent(alpn)}&fp=random&type=${type}&host=${伪装域名}${grpcSkip}${scv == 'true' ? '&allowInsecure=1' : ''}&fragment=${encodeURIComponent('1,40-60,30-50,tlshello')}#${encodeURIComponent(addressid + 节点备注)}`;
+					const 特洛伊Link = `${atob(atob('ZEhKdmFtRnVPaTh2')) + uuid}@${address}:${port}?security=tls&sni=${sni}&alpn=${encodeURIComponent(alpn)}&fp=random&type=${type}&host=${伪装域名}${authorityParam}${serviceNameParam}${grpcSkip}${scv == 'true' ? '&allowInsecure=1' : ''}&fragment=${encodeURIComponent('1,40-60,30-50,tlshello')}#${encodeURIComponent(addressid + 节点备注)}`;
 					return 特洛伊Link;
 				} else {
+					const authorityParam = type === 'grpc' ? `&authority=${encodeURIComponent(伪装域名)}` : '';
+					const serviceNameParam = type === 'grpc' && 最终路径 ? `&serviceName=${encodeURIComponent(最终路径)}` : '';
 					const grpcSkip = type === 'grpc' ? '' : `&path=${encodeURIComponent(最终路径) + xhttp}`;
-					const 为烈士Link = `${atob(atob('ZG14bGMzTTZMeTg9')) + uuid}@${address}:${port}?security=tls&sni=${sni}&alpn=${encodeURIComponent(alpn)}&fp=random&type=${type}&host=${伪装域名}${grpcSkip}${scv == 'true' ? '&allowInsecure=1' : ''}&fragment=${encodeURIComponent('1,40-60,30-50,tlshello')}&encryption=none#${encodeURIComponent(addressid + 节点备注)}`;
+					const 为烈士Link = `${atob(atob('ZG14bGMzTTZMeTg9')) + uuid}@${address}:${port}?security=tls&sni=${sni}&alpn=${encodeURIComponent(alpn)}&fp=random&type=${type}&host=${伪装域名}${authorityParam}${serviceNameParam}${grpcSkip}${scv == 'true' ? '&allowInsecure=1' : ''}&fragment=${encodeURIComponent('1,40-60,30-50,tlshello')}&encryption=none#${encodeURIComponent(addressid + 节点备注)}`;
 					return 为烈士Link;
 				}
 

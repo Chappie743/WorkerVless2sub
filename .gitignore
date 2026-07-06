@@ -1,2 +1,4 @@
 __pycache__/
-./omo
+.omo/
+.opencode/
+node_modules/
